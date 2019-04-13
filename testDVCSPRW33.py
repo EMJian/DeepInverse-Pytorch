@@ -159,6 +159,7 @@ def PRWimgTensor(imgpath,phi):
         for i in range(X.shape[0]):         
             y = torch.mv(phi, img_x[i].view(-1) )   # Performs a matrix-vector product
             # You cannot use sys.getsizeof(y) to get the correct memory size of the tensor y
+            # https://stackoverflow.com/questions/54361763/pytorch-why-is-the-memory-occupied-by-the-tensor-variable-so-small
             ysize = ysize + sys.getsizeof(y.storage());
             x_tilde = torch.mv(phi.transpose(0,1), y)            
             x_tilde = x_tilde.view(1, 1, block_size, block_size)  # view as 1-channel 32x32 image
