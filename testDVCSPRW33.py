@@ -65,7 +65,7 @@ def RGBrec(model,csinput,device,img_orig, channels_Num, row_new, col_new):
     print(img_recch.shape)   
     
     # Use Tensor.cpu() to copy the tensor to host memory first
-    img_recch.cpu().numpy()
+    img_recch = img_recch.cpu().numpy()
 
     row_block = int(row_new/block_size)
     col_block = int(col_new/block_size)
@@ -158,7 +158,8 @@ def PRWimgTensor(imgpath,phi):
         X = torch.empty(blocknum, 1, block_size, block_size, dtype=torch.float)   
         for i in range(X.shape[0]):         
             y = torch.mv(phi, img_x[i].view(-1) )   # Performs a matrix-vector product
-            ysize = ysize + sys.getsizeof(y);
+            # You cannot use sys.getsizeof(y) to get the correct memory size of the tensor y
+            ysize = ysize + sys.getsizeof(y.storage());
             x_tilde = torch.mv(phi.transpose(0,1), y)            
             x_tilde = x_tilde.view(1, 1, block_size, block_size)  # view as 1-channel 32x32 image
             X[i] = x_tilde
