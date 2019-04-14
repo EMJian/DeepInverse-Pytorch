@@ -4,7 +4,7 @@ Re-implements the DeepInverse model described in Learning to invert: Signal reco
 ## The implementation mainly uses pytorch 0.4.1. 
 
 ## Training data (Training_Data_Img91.mat)   
-downloaded at (https://drive.google.com/open?id=1AoEcNA5-onnSqBcWZawNw7ZFrJ1fFR_C)
+Downloaded at (https://drive.google.com/open?id=1AoEcNA5-onnSqBcWZawNw7ZFrJ1fFR_C)
 
 # Results on the test datast Set11  
 
