@@ -21,5 +21,5 @@ Downloaded at （http://vllab.ucmerced.edu/wlai24/LapSRN/） or (https://drive.g
  - CSNet in MatconvNet（https://github.com/wzhshi/CSNet）  
  - ReconNet in matCaffe (https://github.com/AtenaKid/Caffe-DCS)
  - Adaptive ReconNet in Tensorflow (https://github.com/yucicheung/AdaptiveReconNet)  
- - reproducible deep learning for compressive sensing (https://github.com/AtenaKid/Reproducible-Deep-Compressive-Sensing)  
+ - Reproducible deep learning for compressive sensing (https://github.com/AtenaKid/Reproducible-Deep-Compressive-Sensing)  
 
