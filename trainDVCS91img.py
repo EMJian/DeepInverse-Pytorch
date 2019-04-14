@@ -2,7 +2,7 @@
 https://github.com/y0umu/DeepInverse-Reimplementation
 '''
 # imports
-import glob,os
+import glob
 import scipy.io as sio
 from PIL import Image
 import numpy as np
@@ -23,8 +23,7 @@ from DepInvercs_model import DeepInverse
 # set up device
 USE_GPU = True
 dtype = torch.float32 # we will be using float throughout this tutorial
-# block_size =32;
-block_size =33;
+block_size =32;
 
 if USE_GPU and torch.cuda.is_available():
     device = torch.device('cuda')
@@ -34,69 +33,12 @@ print('using device:', device)
 # Constant to control how frequently we print train loss
 print_every = 100
 
-def getPhi(CS_ratio):
-    N = block_size*block_size
-#     M = int(N * csrate)
-    if CS_ratio == '0.01':
-        M = 10
-    elif CS_ratio == '0.04':
-        M = 43
-    elif CS_ratio == '0.10':
-        M = 109
-    elif CS_ratio == '0.25':
-        M = 272
-    elif CS_ratio == '0.40':
-        M = 436
-    elif CS_ratio == '0.50':
-        M = 545
+def getPhi(csrate):
+    N = 32*32
+    M = int(N * csrate)
     phi = torch.randn(M, N)
     return phi
 
-def normalize(v):
-    return v / np.sqrt(v.dot(v))
-
-def generate_phi(CS_ratio):
-    
-    if CS_ratio == '0.01':
-        M = 10
-    elif CS_ratio == '0.04':
-        M = 43
-    elif CS_ratio == '0.10':
-        M = 109
-    elif CS_ratio == '0.25':
-        M = 272
-    elif CS_ratio == '0.40':
-        M = 436
-    elif CS_ratio == '0.50':
-        M = 545
-    
-    N = block_size*block_size
-    np.random.seed(333)
-    phi = np.random.normal(size=(M, N))
-    n = len(phi)
-    
-    # perform Gramm-Schmidt orthonormalization    
-    phi[0, :] = normalize(phi[0, :])
-    
-    for i in range(1, n):
-        Ai = phi[i, :]
-        for j in range(0, i):
-            Aj = phi[j, :]
-            t = Ai.dot(Aj)
-            Ai = Ai - t * Aj
-        phi[i, :] = normalize(Ai)
-        
-    return phi
-
-def loadPhi(csrate):    
-    Phi_data_Name = 'phi_0_%s_1089.mat' % csrate[2:4]
-    Phi_data = sio.loadmat(Phi_data_Name)
-#     Phi_input = Phi_data['phi'].transpose()
-    Phi_input = Phi_data['phi']
-    Phi_input = Phi_input.astype(np.float32)
-    phi = torch.from_numpy(Phi_input)
-        
-    return phi
     
 # writing custom Datasets + Samplers
 # https://www.pytorchtutorial.com/pytorch-custom-dataset-examples/
@@ -196,8 +138,7 @@ def train91Img(model, optimizer, loader_train, epochs=1, logdir=None):
     - logdir: string. Used to specific the logdir of tensorboard
     
     Returns: Nothing, but prints model accuracies during training.
-    """    
-    
+    """
     model = model.to(device=device)  # move the model parameters to CPU/GPU
     writer = SummaryWriter(log_dir=logdir)
     print("Run `tensorboard --logdir={logdir} --host=127.0.0.1` to visualize in realtime")
@@ -233,50 +174,35 @@ def train91Img(model, optimizer, loader_train, epochs=1, logdir=None):
             if t % print_every == 0:
                 print('Iteration %d, loss = %.4f' % (t, loss.item()))
             tfx_steps += 1
-            
-        print('Current epoch: %d, Total epochs: %d ' % (e,epochs))
     
     # plot everything after the loop is over
     writer.close()  # tensorboardX writer
     plt.plot(loss_history, 'o'); plt.title('Training loss'); plt.xlabel('Iteration')
     plt.show()
 
-# pre-train may be help for improving the performance!!!!
-def pre_train(csrate, filepaths, exp_name = 'exp15'):
-    phi = getPhi(csrate)
+if __name__ == '__main__':  
+    
+    datapath = "/home/chengzi/Desktop/workspace20170624/DeepInvertCS/Train91img"
+    filepaths = glob.glob(datapath + '/*.bmp')
+    
+    csrate = '0.50'   
+    phi = getPhi(float(csrate))
     
     # load dataset
     train_set = load91imgDataset(filepaths, phi)
-    NUM_TRAIN = int(0.8 * len(train_set))
+    NUM_TRAIN = int(0.8 * len(train_set) )
+    TOTAL_SAMPLES = len(train_set)
     loader_train = DataLoader(train_set, batch_size=64, sampler=sampler.SubsetRandomSampler(range(NUM_TRAIN)))    
     print("Dataset loaded")
-    
-    model = DeepInverse(phi.shape)
-    learning_rate = 5e-3
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    train91Img(model, optimizer,loader_train, epochs=5, logdir='runs/' + exp_name + '_1')
-    print("Stage 0 of pre_train is done. \n")
-    
-    return model    
-    
-def finetune_train(csrate, filepaths, fname_sdict, fname_phi, pretrain_model=None, exp_name = 'exp15'):   
-    
-    phi = loadPhi(csrate)
-    # load dataset
-    train_set = load91imgDataset(filepaths, phi)
-    NUM_TRAIN = int(0.8 * len(train_set))
-    loader_train = DataLoader(train_set, batch_size=64, sampler=sampler.SubsetRandomSampler(range(NUM_TRAIN)))    
-    print("Dataset loaded")
-    
-    if pretrain_model==None:
-        model = DeepInverse(phi.shape)
-    else:
-        model = pretrain_model
+##################################################### 
 
+ # train!
+    exp_name = 'exp15'
+    model = DeepInverse(phi.shape)
     learning_rate = 5e-4
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     train91Img(model, optimizer,loader_train, epochs=5, logdir='runs/' + exp_name + '_1')
-    print("Stage 1 of train is done. \n")   
+    print("Stage 1 of train is done. \n")    
     
     learning_rate = 1e-5
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
@@ -284,39 +210,15 @@ def finetune_train(csrate, filepaths, fname_sdict, fname_phi, pretrain_model=Non
     print("Stage 2 of train is done. \n")
 
     # Save the state_dict of the model
+    fname_sdict = 'dvcs-img91_gray.pt'
+    fname_phi = 'dvcs-img91_gray-measurement.pickle'
+    
+    fname_sdict = "dvcs_91imgcs_%s_gray.pt" % (csrate)[2:4]
+    fname_phi = "dvcs_91imgcs_%s_gray-measurement.pickle" % (csrate)[2:4]
+    
     torch.save(model.state_dict(), fname_sdict)
     with open(fname_phi, 'wb') as f:
         pickle.dump(phi, f)
     
     print("Trained model is saved. \n")
-    
-if __name__ == '__main__':  
-    
-    datapath = "/home/chengzi/Desktop/workspace20170624/DeepInvertCS/Train91img"
-    filepaths = glob.glob(datapath + '/*.bmp')
-    
-    csrate = '0.01'
-    
-    fname_sdict = 'dvcs-img91_gray.pt'
-    fname_phi = 'dvcs-img91_gray-measurement.pickle'
-    
-    fname_sdict = "dvcs_91imgcs_%s_gray.pt" % (csrate)[2:4]
-    fname_phi = "dvcs_91imgcs_%s_gray-measurement.pickle" % (csrate)[2:4] 
-    
-    exp_name = 'exp15'   
-    
-    #---------------train-------------------- 
-# First, train with automatically generated Phi. Second, tuned on the pre-trained model
-    pr_model = None
-    fine_tune = False     
-    if fine_tune == True:
-        pr_model = pre_train(csrate, filepaths, exp_name)
-    else:
-        print("It may better for get high performance to pre-train with automatically generated Phi at first . \n")
-    
-    finetune_train(csrate, filepaths, fname_sdict, fname_phi, pr_model, exp_name)
-    
-
-
-
 

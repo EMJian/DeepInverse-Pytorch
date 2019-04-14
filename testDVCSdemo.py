@@ -11,13 +11,38 @@ from six.moves import cPickle as pickle
 import matplotlib.pyplot as plt
 import torch
 import torch.nn.functional as F
+import torchvision.transforms as T
 
 from DepInvercs_model import DeepInverse
 
-  
 block_size =33;
 dtype = torch.float32
 
+# https://blog.csdn.net/qq_36955294/article/details/82888443
+def tensor_to_PIL(tensor):
+    image = tensor.cpu().clone()
+#     image = image.squeeze(0)
+    image = T.ToPILImage()(image)
+    return image
+
+def image_to_tensor(image_name,device): 
+    imgloader = T.Compose([
+    T.ToTensor(), # range [0, 255] -> [0.0,1.0]
+    ]
+    )
+    image = Image.open(image_name).convert('RGB') 
+#     image = imgloader(image).unsqueeze(0)
+    image = imgloader(image) 
+    return image.to(device, torch.float)
+
+def PIL_to_tensor(image,device):
+    imgloader = T.Compose([
+    T.ToTensor(), # range [0, 255] -> [0.0,1.0]
+    ]
+    )
+#     image = imgloader(image).unsqueeze(0)
+    image = imgloader(image) 
+    return image.to(device, torch.float)
 
 def createDir(imgn,dirname,CS_ratio):
     img_path = os.path.dirname(imgn)        
@@ -62,10 +87,10 @@ def RGBrec(model,csinput,device,img_orig, channels_Num, row_new, col_new):
         csinput = csinput.to(device=device, dtype=dtype)
         img_recch = model(csinput)
     print(img_recch.shape)   
-    
+
     # Use Tensor.cpu() to copy the tensor to host memory first
     img_recch = img_recch.cpu().numpy()
-
+    
     row_block = int(row_new/block_size)
     col_block = int(col_new/block_size)
     blocknum = int(row_block*col_block) 
@@ -111,9 +136,7 @@ def PRWimgTensor(imgpath,phi):
     img_rgb = Image.open(imgpath);
 #   plt.show(img_rgb)
     img = np.array(img_rgb, dtype=np.uint8)   
-#     img_bsize = sys.getsizeof(img);  
-    img_bsize = img.nbytes;  
-    print("orig_img size ",img_bsize, img.shape, img.dtype)
+    img_bsize = sys.getsizeof(img);  
     
 #     [row, col, channels_Num] = img.shape
     channels_Num = len(img_rgb.split())
@@ -138,7 +161,7 @@ def PRWimgTensor(imgpath,phi):
     img_ycs = []
     ysize = 0.0            
     for channel_no in range(channels_Num):
-#         print("channel no ====%d"%(channel_no))
+        print("channel no ====%d"%(channel_no))
         if channels_Num==1:        
             imgorg=img[:,:]
         else:
@@ -156,15 +179,15 @@ def PRWimgTensor(imgpath,phi):
                 count = count +1
         img_x = torch.from_numpy(img_x)
         
-        X = torch.empty(blocknum, 1, block_size, block_size, dtype=torch.float) 
+        X = torch.empty(blocknum, 1, block_size, block_size, dtype=torch.float)   
         for i in range(X.shape[0]):         
-            y = torch.mv(phi, img_x[i].view(-1) )   # Performs a matrix-vector product 
+            y = torch.mv(phi, img_x[i].view(-1) )   # Performs a matrix-vector product
             # You cannot use sys.getsizeof(y) to get the correct memory size of the tensor y
             ysize = ysize + sys.getsizeof(y.storage());
             x_tilde = torch.mv(phi.transpose(0,1), y)            
             x_tilde = x_tilde.view(1, 1, block_size, block_size)  # view as 1-channel 32x32 image
             X[i] = x_tilde
-        img_ycs.append(X)  
+        img_ycs.append(X)   
     img_ycs22 = torch.cat(img_ycs)
     
     return img/255.0, channels_Num, img_bsize, ysize, img_ycs22, row_new, col_new
@@ -181,7 +204,6 @@ def DeepInvertCS(filepaths,fname_phi,fname_sdict, CS_ratio):
 #   To load the model, use the following code:
     with open(fname_phi, 'rb') as f:
         phi = pickle.load(f)
-    print("Phi size = ",phi.shape)
     model = DeepInverse(phi.shape)
     model.load_state_dict(torch.load(fname_sdict))
     model.eval()
@@ -206,7 +228,7 @@ def DeepInvertCS(filepaths,fname_phi,fname_sdict, CS_ratio):
         img_name = os.path.split(imgName)[-1]        
         img_rec_name = "%s/%s" % (img_rec_path, img_name)    
         RGBimg_rec.save(img_rec_name) 
-#         print("Rec_image save to",img_rec_name) 
+        print("Rec_image save to",img_rec_name) 
     #-------------------------------------------------
     print("-----------------------")     
     output_data = "CS_ratio= %.2f , AvgPSNR is %.2f dB, mCR is %.3f \n" % (float(CS_ratio), np.mean(PSNR_All), np.mean(MCRy))
@@ -221,11 +243,12 @@ def DeepInvertCS(filepaths,fname_phi,fname_sdict, CS_ratio):
 if __name__ == '__main__':   
 
     path_dataset = "/home/chengzi/Desktop/workspace20170624/DeepInvertCS/Test_Image"
+    filepaths = glob.glob(path_dataset + '/*.jpg')
     filepaths = glob.glob(path_dataset + '/*.tif')
     
-#     path_dataset = "/media/chengzi/FT-dataset/PRW-v16.04.20/testprw"    
-#     filepaths = glob.glob(path_dataset + '/*.jpg')    
-    
+    fname_sdict = 'pytorch-cifar10_csdl_gray.pt'
+    fname_phi = 'pytorch-cifar10_csdl_gray-measurement.pickle'
+   
     csrate = '0.01'
     
     fname_sdict = "dvcs_91imgcs_%s_gray.pt" % (csrate)[2:4]
