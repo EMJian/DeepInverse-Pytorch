@@ -1,5 +1,5 @@
 # DeepInverse Re-implementation
-Re-implements the DeepInverse model described in Learning to invert: Signal recovery via Deep Convolutional Networks. (https://ieeexplore.ieee.org/abstract/document/7952561, https://arxiv.org/pdf/1701.03891.pdf )
+Re-implements the Re-implement the Compressive Sensing (CS) Network DeepInverse described in Learning to invert: Signal recovery via Deep Convolutional Networks. (https://ieeexplore.ieee.org/abstract/document/7952561, https://arxiv.org/pdf/1701.03891.pdf )
 
 ## The implementation mainly uses pytorch 0.4.1. 
 
@@ -16,9 +16,9 @@ Downloaded at （http://vllab.ucmerced.edu/wlai24/LapSRN/） or (https://drive.g
  MR=0.50    PSNR=23.19  
 
 ## Refs:
- - DeepInverse in Pytorch （https://github.com/y0umu/DeepInverse-Reimplementation）  
- - ISTA-Net in Tensorflow （https://github.com/jianzhangcs/ISTA-Net）  
- - CSNet in MatconvNet（https://github.com/wzhshi/CSNet）  
+ - DeepInverse in Pytorch （https://github.com/y0umu/DeepInverse-Reimplementation )  
+ - ISTA-Net in Tensorflow （https://github.com/jianzhangcs/ISTA-Net)  
+ - CSNet in MatconvNet（https://github.com/wzhshi/CSNet)  
  - ReconNet in matCaffe (https://github.com/AtenaKid/Caffe-DCS) and (https://github.com/KuldeepKulkarni/ReconNet) 
  - Adaptive ReconNet in Tensorflow (https://github.com/yucicheung/AdaptiveReconNet)  
  - Reproducible deep learning for compressive sensing (https://github.com/AtenaKid/Reproducible-Deep-Compressive-Sensing)  
