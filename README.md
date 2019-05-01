@@ -23,6 +23,7 @@ Downloaded at （http://vllab.ucmerced.edu/wlai24/LapSRN/ ）or (https://drive.g
  - Adaptive ReconNet in Tensorflow (https://github.com/yucicheung/AdaptiveReconNet)  
  - Reproducible deep learning for compressive sensing (https://github.com/AtenaKid/Reproducible-Deep-Compressive-Sensing)  
  
+ - SDA (Stacked Denoising AutoEncoder) (https://github.com/ShayanPersonal/stacked-autoencoder-pytorch) OR (https://github.com/vlukiyanov/pt-sdae) OR (https://github.com/sexysw/pytorch_DAE)
  - Learned D-AMP and D-AMP (https://github.com/ricedsp/D-AMP_Toolbox)
  - IRCNN (https://github.com/cszn/IRCNN), (https://github.com/lipengFu/IRCNN) and (https://github.com/YunzeMan/IRCNN)
  - DnCNN （https://github.com/cszn/DnCNN ）
